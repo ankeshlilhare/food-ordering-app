@@ -70,11 +70,9 @@ public class OrderService {
         order.setStatus("PENDING");
         order.setPaymentMethod(request.getPaymentMethod());
 
-        // Calculate total and create order items
+        // Create order items and calculate total
         double total = 0.0;
-        Order savedOrder = orderRepository.save(order);
         List<OrderItem> createdItems = new ArrayList<>();
-
         for (var itemRequest : request.getItems()) {
             if (itemRequest.getQuantity() == null || itemRequest.getQuantity() <= 0) {
                 throw new RuntimeException("Quantity must be greater than zero");
@@ -92,21 +90,21 @@ public class OrderService {
             }
 
             OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(savedOrder);
+            orderItem.setOrder(order); // Set the transient order
             orderItem.setMenuItem(menuItem);
             orderItem.setQuantity(itemRequest.getQuantity());
             orderItem.setPrice(menuItem.getPrice());
 
-            OrderItem persistedItem = orderItemRepository.save(orderItem);
-            createdItems.add(persistedItem);
+            createdItems.add(orderItem);
             total += menuItem.getPrice() * itemRequest.getQuantity();
         }
 
-        savedOrder.setTotalAmount(total);
-        savedOrder.setOrderItems(createdItems);
-        Order updatedOrder = orderRepository.save(savedOrder);
+        order.setTotalAmount(total);
+        order.setOrderItems(createdItems);
 
-        return convertToDTO(updatedOrder);
+        Order savedOrder = orderRepository.save(order);
+
+        return convertToDTO(savedOrder);
     }
 
     /**

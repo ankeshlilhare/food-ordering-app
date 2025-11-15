@@ -165,11 +165,22 @@ export default function RestaurantDetailPage() {
             Back to Restaurants
           </button>
 
+          <div className="relative h-64 rounded-2xl overflow-hidden mb-6">
+            <img
+              src={restaurant.imageUrl || 'https://via.placeholder.com/800x400'}
+              alt={restaurant.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div className="absolute bottom-6 left-6 text-white">
+              <h1 className="text-4xl font-bold">{restaurant.name}</h1>
+            </div>
+          </div>
+
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{restaurant.name}</h1>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 mb-3">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
                     🍜 {restaurant.cuisine}
                   </span>
@@ -186,7 +197,7 @@ export default function RestaurantDetailPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-gray-600 mt-3 flex items-start">
+                <p className="text-gray-600 flex items-start">
                   <svg className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -241,7 +252,7 @@ export default function RestaurantDetailPage() {
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
                           <span className="text-lg font-bold text-blue-600 ml-4">
-                            ${item.price.toFixed(2)}
+                            ₹{item.price.toFixed(2)}
                           </span>
                         </div>
                         {item.description && (

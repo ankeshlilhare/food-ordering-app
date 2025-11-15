@@ -83,8 +83,12 @@ export default function RestaurantsPage() {
                   href={`/restaurants/${restaurant.id}`}
                   className="group block bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden"
                 >
-                  <div className="relative h-48 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 overflow-hidden">
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
+                  <div className="relative h-48 bg-gray-200 overflow-hidden">
+                    <img
+                      src={restaurant.imageUrl || 'https://via.placeholder.com/400x200'}
+                      alt={restaurant.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
                     <div className="absolute top-4 right-4">
                       {restaurant.isActive ? (
                         <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full shadow-lg">

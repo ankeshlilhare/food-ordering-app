@@ -25,7 +25,10 @@ public class Order {
     private List<OrderItem> orderItems;
 
     @Column(nullable = false)
-    private Double totalAmount;
+    private Double totalAmount = 0.0;
+
+    @Column(nullable = false)
+    private String currency = "INR";
 
     @Column(nullable = false)
     private String status = "PENDING"; // PENDING, CONFIRMED, CANCELLED

@@ -9,6 +9,7 @@ public class RestaurantDTO {
     private String cuisine;
     private String address;
     private String phoneNumber;
+    private String imageUrl;
     private Integer countryId;
     private String countryName;
     private Boolean isActive;

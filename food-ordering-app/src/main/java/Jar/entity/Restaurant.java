@@ -18,6 +18,7 @@ public class Restaurant {
     private String cuisine;
     private String address;
     private String phoneNumber;
+    private String imageUrl;
 
     @ManyToOne
     @JoinColumn(name = "country_id", nullable = false)

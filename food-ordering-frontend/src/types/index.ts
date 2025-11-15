@@ -19,6 +19,7 @@ export interface Restaurant {
   cuisine: string;
   address: string;
   phoneNumber: string;
+  imageUrl: string;
   countryId: number;
   countryName: string;
   isActive: boolean;
