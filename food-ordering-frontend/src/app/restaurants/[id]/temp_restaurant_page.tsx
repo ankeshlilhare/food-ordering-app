@@ -12,10 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function RestaurantDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { isAdmin, isManager, isMember } = useAuth();
+  const { isAdmin, isManager, user } = useAuth();
   const restaurantId = parseInt(params.id as string);
-
-  const canOrderFood = isAdmin || isManager; // Only ADMIN and MANAGER can create orders
 
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -24,6 +22,28 @@ export default function RestaurantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1555992336-03a23c4d4d2f?w=1200&q=80&auto=format&fit=crop';
+  const [imageSrc, setImageSrc] = useState<string>(FALLBACK_IMAGE);
+
+  const useINRCurrency = useMemo(() => {
+    return (restaurant?.countryId === 1) || (user?.countryId === 1);
+  }, [restaurant, user]);
+  const [currency, setCurrency] = useState<{ locale: string; code: string }>({ locale: 'en-US', code: 'USD' });
+
+  useEffect(() => {
+    // Determine currency from restaurant or user info. Prioritize explicit IDs, then name.
+    const isIndian = (restaurant?.countryId === 1) || (user?.countryId === 1) || (restaurant?.countryName?.toLowerCase?.().includes('india'));
+    if (isIndian) {
+      setCurrency({ locale: 'en-IN', code: 'INR' });
+    } else {
+      setCurrency({ locale: 'en-US', code: 'USD' });
+    }
+  }, [restaurant, user]);
+
+  const formatPrice = (price: number) => {
+    const value = Number(price) || 0;
+    return new Intl.NumberFormat(currency.locale, { style: 'currency', currency: currency.code }).format(value);
+  };
 
   // Combined data fetching into one useEffect with Promise.all
   useEffect(() => {
@@ -46,6 +66,8 @@ export default function RestaurantDetailPage() {
         ]);
 
         setRestaurant(restaurantData);
+        // set image source to restaurant image if available, otherwise fallback
+        setImageSrc(restaurantData?.imageUrl || FALLBACK_IMAGE);
         setMenuItems(menuItemsData);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to load restaurant details');
@@ -178,33 +200,28 @@ export default function RestaurantDetailPage() {
           </button>
 
           {/* Restaurant Header */}
-          <div className="mb-8">
-            {restaurant.imageUrl && (
-              <div className="mb-6 rounded-lg overflow-hidden shadow-md">
-                <img 
-                  src="https://www.google.com/imgres?q=tag%20hotel%20img&imgurl=https%3A%2F%2Fimages.picxy.com%2Fcache%2F2020%2F7%2F25%2F9a63cec03ee13d5c7062a9f22f4285bc.jpg&imgrefurl=https%3A%2F%2Fwww.picxy.com%2Fphoto%2F968569&docid=Y474Z1CPk8pZrM&tbnid=K4doCnwfimi0-M&vet=12ahUKEwiqtdG-vfaQAxW0V2wGHdDmDwsQM3oECBYQAA..i&w=1600&h=900&hcb=2&ved=2ahUKEwiqtdG-vfaQAxW0V2wGHdDmDwsQM3oECBYQAA"
-                  alt={restaurant.name}
-                  className="w-full h-96 object-cover"
-                />
-              </div>
-            )}
+          <div className="mb-8 rounded-lg overflow-hidden shadow-md">
+            <img
+              src={imageSrc}
+              alt={`${restaurant.name} - Restaurant`}
+              className="w-full h-96 object-cover mb-4"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (target.src !== FALLBACK_IMAGE) target.src = FALLBACK_IMAGE;
+              }}
+            />
             <h1 className="text-4xl font-bold text-gray-900 mb-2">{restaurant.name}</h1>
-            <p className="text-gray-600">{restaurant.address}</p>
+            <div className="flex items-center gap-3">
+              <p className="text-gray-600">{restaurant.address}</p>
+              {/* Debug/verification: show resolved currency code */}
+              <span className="text-sm text-gray-500">({currency.code})</span>
+            </div>
           </div>
 
           {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
               <p className="text-red-800">{error}</p>
-            </div>
-          )}
-
-          {/* MEMBER Access Notice */}
-          {isMember && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-blue-800">
-                <strong>Note:</strong> As a Team Member, you can view restaurants and menu items, but you cannot create or place orders. Please contact your Manager or Admin to place an order.
-              </p>
             </div>
           )}
 
@@ -219,36 +236,28 @@ export default function RestaurantDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {menuItems.map((item) => (
                     <div key={item.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                      {item.imageUrl && (
-                        <div className="w-full h-48 overflow-hidden bg-gray-200">
-                          <img 
-                            src={item.imageUrl} 
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
+                      <div className="relative">
+                        <img
+                          src={item.imageUrl || FALLBACK_IMAGE}
+                          alt={`${item.name} - dish`}
+                          className="w-full h-48 object-cover"
+                          onError={(e) => {
+                            const t = e.currentTarget as HTMLImageElement;
+                            if (t.src !== FALLBACK_IMAGE) t.src = FALLBACK_IMAGE;
+                          }}
+                        />
+                        <div className="absolute top-3 right-3 bg-white bg-opacity-90 text-gray-900 px-3 py-1 rounded font-semibold shadow">{formatPrice(item.price)}</div>
+                      </div>
                       <div className="p-4">
                         <h3 className="font-semibold text-lg text-gray-900 mb-2">{item.name}</h3>
                         <p className="text-gray-600 text-sm mb-4">{item.description}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-xl font-bold text-blue-600">${item.price.toFixed(2)}</span>
-                          {canOrderFood ? (
-                            <button
-                              onClick={() => addToCart(item.id)}
-                              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                            >
-                              Add to Cart
-                            </button>
-                          ) : (
-                            <button
-                              disabled
-                              className="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed opacity-60"
-                              title="Only ADMIN and MANAGER can order"
-                            >
-                              Unavailable
-                            </button>
-                          )}
+                          <button
+                            onClick={() => addToCart(item.id)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                          >
+                            Add to Cart
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -259,83 +268,74 @@ export default function RestaurantDetailPage() {
 
             {/* Cart Sidebar */}
             <div className="lg:col-span-1">
-              {canOrderFood ? (
-                <div className="sticky top-4 bg-gray-50 rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Cart</h2>
+              <div className="sticky top-4 bg-gray-50 rounded-lg border border-gray-200 p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Cart</h2>
 
-                  {cartItems.length === 0 ? (
-                    <p className="text-gray-600">Your cart is empty.</p>
-                  ) : (
-                    <>
-                      <div className="space-y-4 mb-6 max-h-80 overflow-y-auto">
-                        {cartItems.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between border-b border-gray-200 pb-4">
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">{item.name}</p>
-                              <p className="text-sm text-gray-600">${item.price.toFixed(2)} x {item.quantity}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => removeFromCart(item.id)}
-                                className="text-red-600 hover:text-red-800 font-bold"
-                              >
-                                −
-                              </button>
-                              <span className="w-8 text-center">{item.quantity}</span>
-                              <button
-                                onClick={() => addToCart(item.id)}
-                                className="text-green-600 hover:text-green-800 font-bold"
-                              >
-                                +
-                              </button>
-                            </div>
+                {cartItems.length === 0 ? (
+                  <p className="text-gray-600">Your cart is empty.</p>
+                ) : (
+                  <>
+                    <div className="space-y-4 mb-6 max-h-80 overflow-y-auto">
+                      {cartItems.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between border-b border-gray-200 pb-4">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{item.name}</p>
+                              <p className="text-sm text-gray-600">{formatPrice(item.price)} x {item.quantity}</p>
                           </div>
-                        ))}
-                      </div>
-
-                      {/* Cart Total */}
-                      <div className="border-t border-gray-200 pt-4 mb-6">
-                        <div className="flex justify-between items-center">
-                          <span className="text-lg font-semibold text-gray-900">Total:</span>
-                          <span className="text-2xl font-bold text-blue-600">${cartTotal.toFixed(2)}</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => removeFromCart(item.id)}
+                              className="text-red-600 hover:text-red-800 font-bold"
+                            >
+                              −
+                            </button>
+                            <span className="w-8 text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => addToCart(item.id)}
+                              className="text-green-600 hover:text-green-800 font-bold"
+                            >
+                              +
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      ))}
+                    </div>
 
-                      {/* Payment Method */}
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Payment Method
-                        </label>
-                        <select
-                          value={paymentMethod}
-                          onChange={(e) => setPaymentMethod(e.target.value)}
-                          className="w-full border border-gray-300 rounded px-3 py-2"
-                        >
-                          <option value="CREDIT_CARD">Credit Card</option>
-                          <option value="DEBIT_CARD">Debit Card</option>
-                          <option value="CASH">Cash</option>
-                        </select>
+                    {/* Cart Total */}
+                    <div className="border-t border-gray-200 pt-4 mb-6">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-gray-900">Total:</span>
+                        <span className="text-2xl font-bold text-blue-600">{formatPrice(cartTotal)}</span>
                       </div>
+                    </div>
 
-                      {/* Checkout Button */}
-                      <button
-                        onClick={handleCheckout}
-                        disabled={submitting}
-                        className="w-full bg-blue-600 text-white font-semibold py-3 rounded hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                    {/* Payment Method */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Payment Method
+                      </label>
+                      <select
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
                       >
-                        {submitting ? 'Processing...' : 'Checkout'}
-                      </button>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="sticky top-4 bg-yellow-50 rounded-lg border border-yellow-200 p-6">
-                  <h3 className="text-lg font-bold text-yellow-900 mb-3">📦 Cart</h3>
-                  <p className="text-yellow-800 text-sm">
-                    As a Team Member, you cannot create or place orders. Only ADMIN and MANAGER roles can order food.
-                  </p>
-                </div>
-              )}
+                        <option value="CREDIT_CARD">Credit Card</option>
+                        <option value="DEBIT_CARD">Debit Card</option>
+                        <option value="CASH">Cash</option>
+                      </select>
+                    </div>
+
+                    {/* Checkout Button */}
+                    <button
+                      onClick={handleCheckout}
+                      disabled={submitting}
+                      className="w-full bg-blue-600 text-white font-semibold py-3 rounded hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                    >
+                      {submitting ? 'Processing...' : 'Checkout'}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

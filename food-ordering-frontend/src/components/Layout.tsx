@@ -19,6 +19,7 @@ export default function Layout({ children }: LayoutProps) {
   const navLinks = [
     { href: '/restaurants', label: 'Restaurants' },
     { href: '/orders', label: 'My Orders' },
+    ...(isAdmin || isManager ? [{ href: '/add-menu-item', label: '+ Add Menu Item' }] : []),
     ...(isAdmin ? [{ href: '/admin/restaurants', label: 'Manage Restaurants' }] : []),
   ];
 

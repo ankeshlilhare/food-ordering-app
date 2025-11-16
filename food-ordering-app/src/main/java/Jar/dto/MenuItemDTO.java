@@ -12,4 +12,5 @@ public class MenuItemDTO {
     private Integer restaurantId;
     private String restaurantName;
     private Boolean isAvailable;
+    private String imageUrl;
 }

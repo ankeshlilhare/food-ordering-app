@@ -8,7 +8,7 @@ import { Order } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function OrdersPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isManager } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -177,7 +177,7 @@ export default function OrdersPage() {
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {order.status === 'PENDING' && (
+                        {order.status === 'PENDING' && (isAdmin || isManager) && (
                           <button
                             onClick={() => handleCancel(order.id)}
                             className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 active:scale-95 shadow-md"
@@ -185,7 +185,7 @@ export default function OrdersPage() {
                             Cancel Order
                           </button>
                         )}
-                        {isAdmin && (
+                        {(isAdmin || isManager) && (
                           <button
                             onClick={() => handleUpdatePayment(order.id)}
                             className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 active:scale-95 shadow-md"

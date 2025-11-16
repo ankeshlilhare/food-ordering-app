@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import Cookies from 'js-cookie';
 import { LoginRequest, LoginResponse, Restaurant, MenuItem, Order, CreateOrderRequest, ErrorResponse } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -65,9 +65,18 @@ class ApiClient {
     return response.data;
   }
 
+  async deleteRestaurant(id: number): Promise<void> {
+    await this.client.delete(`/api/restaurants/${id}`);
+  }
+
   // Menu item endpoints
   async getMenuItemsByRestaurant(restaurantId: number): Promise<MenuItem[]> {
     const response = await this.client.get<MenuItem[]>(`/api/menu-items/restaurant/${restaurantId}`);
+    return response.data;
+  }
+
+  async createMenuItem(restaurantId: number, menuItem: Omit<MenuItem, 'id' | 'restaurantName' | 'isAvailable'>): Promise<MenuItem> {
+    const response = await this.client.post<MenuItem>(`/api/menu-items/restaurant/${restaurantId}`, menuItem);
     return response.data;
   }
 

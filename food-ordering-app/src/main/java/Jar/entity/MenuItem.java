@@ -26,4 +26,6 @@ public class MenuItem {
     private Restaurant restaurant;
 
     private Boolean isAvailable = true;
+
+    private String imageUrl;
 }

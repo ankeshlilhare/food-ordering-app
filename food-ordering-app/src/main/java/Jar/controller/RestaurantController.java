@@ -65,6 +65,26 @@ public class RestaurantController {
         return ResponseEntity.ok(created);
     }
 
+    /**
+     * Delete restaurant - ADMIN only
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteRestaurant(
+            @PathVariable Integer id,
+            HttpServletRequest request) {
+
+        String role = extractRole(request);
+
+        // RBAC: Only ADMIN can delete restaurants
+        if (!"ADMIN".equals(role)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("error", "Access denied: Only ADMIN can delete restaurants"));
+        }
+
+        restaurantService.deleteRestaurant(id);
+        return ResponseEntity.ok(Map.of("message", "Restaurant deleted successfully"));
+    }
+
     // Helper methods
     private String extractRole(HttpServletRequest request) {
         String role = (String) request.getAttribute("role");

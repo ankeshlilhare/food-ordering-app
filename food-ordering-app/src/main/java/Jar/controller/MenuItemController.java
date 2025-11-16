@@ -32,6 +32,22 @@ public class MenuItemController {
         return ResponseEntity.ok(menuItems);
     }
 
+    /**
+     * Create a new menu item - ADMIN, MANAGER, MEMBER
+     */
+    @PostMapping("/restaurant/{restaurantId}")
+    public ResponseEntity<MenuItemDTO> createMenuItem(
+            @PathVariable Integer restaurantId,
+            @RequestBody MenuItemDTO menuItemDTO,
+            HttpServletRequest request) {
+
+        String role = extractRole(request);
+        Integer countryId = extractCountryId(request);
+
+        MenuItemDTO createdMenuItem = menuItemService.createMenuItem(restaurantId, menuItemDTO, role, countryId);
+        return ResponseEntity.ok(createdMenuItem);
+    }
+
     private String extractRole(HttpServletRequest request) {
         String role = (String) request.getAttribute("role");
         return role != null ? role.replace("ROLE_", "") : null;

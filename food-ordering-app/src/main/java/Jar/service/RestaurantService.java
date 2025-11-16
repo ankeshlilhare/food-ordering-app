@@ -70,6 +70,7 @@ public class RestaurantService {
         restaurant.setCuisine(dto.getCuisine());
         restaurant.setAddress(dto.getAddress());
         restaurant.setPhoneNumber(dto.getPhoneNumber());
+        restaurant.setImageUrl(dto.getImageUrl());
         restaurant.setIsActive(true);
 
         Country country = countryRepository.findById(dto.getCountryId())
@@ -80,6 +81,15 @@ public class RestaurantService {
         return convertToDTO(saved);
     }
 
+    /**
+     * Delete restaurant by ID (ADMIN only)
+     */
+    public void deleteRestaurant(Integer id) {
+        Restaurant restaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+        restaurantRepository.delete(restaurant);
+    }
+
     private RestaurantDTO convertToDTO(Restaurant restaurant) {
         RestaurantDTO dto = new RestaurantDTO();
         dto.setId(restaurant.getId());
@@ -87,6 +97,7 @@ public class RestaurantService {
         dto.setCuisine(restaurant.getCuisine());
         dto.setAddress(restaurant.getAddress());
         dto.setPhoneNumber(restaurant.getPhoneNumber());
+        dto.setImageUrl(restaurant.getImageUrl());
         dto.setCountryId(restaurant.getCountry().getId());
         dto.setCountryName(restaurant.getCountry().getName());
         dto.setIsActive(restaurant.getIsActive());
