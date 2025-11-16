@@ -379,6 +379,7 @@ This is an educational project created for training purposes.
 ## ✨ Credits
 
 **Developer**: Ankesh Lilhare
+
 **Framework**: Spring Boot & Next.js  
 **Database**: MySQL  
 **UI Kit**: Tailwind CSS  
